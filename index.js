@@ -1,4 +1,5 @@
 const { ApolloServer } = require(`apollo-server`);
+const { argsToArgsConfig } = require("graphql/type/definition");
 
 // スキーマ定義
 const typeDefs = `
@@ -8,6 +9,7 @@ const typeDefs = `
     name: String
     avatar: String
     postedPhotos: [Photo!]!
+    inPhotos: [Photo!]!
   }
 
   # PhotoCategory列挙型定義
@@ -27,6 +29,7 @@ const typeDefs = `
     category: PhotoCategory!
     description: String
     postedBy: User!
+    taggedUsers: [User!]!
   }
 
   input PostPhotoInput {
@@ -83,6 +86,16 @@ let photos = [
 ];
 // cSpell: enable
 
+// cSpell: disable
+// 写真に写っているユーザーを多対多の関係で表現
+let tags = [
+  { photoID: "1", userID: "gPlake" },
+  { photoID: "2", userID: "sSchmidt" },
+  { photoID: "2", userID: "mHattrup" },
+  { photoID: "2", userID: "gPlake" },
+];
+// cSpell: enable
+
 // リゾルバ定義
 const resolvers = {
   Query: {
@@ -110,12 +123,28 @@ const resolvers = {
     postedBy: (parent) => {
       return users.find((u) => u.githubLogin === parent.githubUser);
     },
+    taggedUsers: (parent) =>
+      tags
+        // タグから写真ID(parent.id)と一致するタグを抽出
+        .filter((tag) => tag.photoID === parent.id)
+        // 抽出したタグからユーザーIDの配列を作成
+        .map((tag) => tag.userID)
+        // すべてのユーザーから、写真IDが一致する写真を検索して配列に格納
+        .map((userID) => users.find((u) => u.githubLogin === userID)),
   },
 
   User: {
     postedPhotos: (parent) => {
       return photos.filter((p) => p.githubUser === parent.githubLogin);
     },
+    inPhotos: (parent) =>
+      tags
+        // タグからユーザーID(parent.id)と一致するタグを抽出
+        .filter((tag) => tag.userID === parent.id)
+        // 抽出したタグから写真IDの配列を作成
+        .map((tag) => tag.photoID)
+        // すべての写真から、写真IDが一致する写真を検索して配列に格納
+        .filter((photoID) => photos.find((p) => p.id == photoID)),
   },
 };
 
