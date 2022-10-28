@@ -1,8 +1,10 @@
 const { ApolloServer } = require(`apollo-server`);
-const { argsToArgsConfig } = require("graphql/type/definition");
+const { GraphQLScalarType } = require("graphql");
 
 // スキーマ定義
 const typeDefs = `
+  scalar DateTime
+
   # User型
   type User {
     githubLogin: ID!
@@ -30,6 +32,7 @@ const typeDefs = `
     description: String
     postedBy: User!
     taggedUsers: [User!]!
+    created: DateTime!
   }
 
   input PostPhotoInput {
@@ -69,12 +72,14 @@ let photos = [
     description: "The heart chute is one of my favorite chutes",
     category: "ACTION",
     githubUser: "gPlake",
+    created: "3-28-1977",
   },
   {
     id: "2",
     name: "Enjoying the sunshine",
     category: "SELFIE",
     githubUser: "sSchmidt",
+    created: "2018-04-15T19:09:57+09:00",
   },
   {
     id: "3",
@@ -82,6 +87,7 @@ let photos = [
     description: "25 laps on gunbarrel today",
     category: "LANDSCAPE",
     githubUser: "sSchmidt",
+    created: "2022-10-28T00:00:00+09:00",
   },
 ];
 // cSpell: enable
@@ -111,6 +117,7 @@ const resolvers = {
       let newPhoto = {
         id: ++_id,
         ...args.input,
+        created: new Date(),
       };
       photos.push(newPhoto);
       // 登録した写真を返却
@@ -119,7 +126,7 @@ const resolvers = {
   },
 
   Photo: {
-    url: (parent) => `http://yooursite.com/img/${parent.id}.jpg`,
+    url: (parent) => `http://yoursite.com/img/${parent.id}.jpg`,
     postedBy: (parent) => {
       return users.find((u) => u.githubLogin === parent.githubUser);
     },
@@ -146,6 +153,14 @@ const resolvers = {
         // すべての写真から、写真IDが一致する写真を検索して配列に格納
         .filter((photoID) => photos.find((p) => p.id == photoID)),
   },
+
+  DateTime: new GraphQLScalarType({
+    name: "DateTime",
+    description: "A valid date time value.",
+    parseValue: (value) => new Date(value),
+    serialize: (value) => new Date(value).toISOString(),
+    parseLiteral: (ast) => ast.value,
+  }),
 };
 
 // サーバー・インスタンス構築
