@@ -5,12 +5,27 @@ const typeDefs = `
   type Query {
     totalPhotos: Int!
   }
+
+  type Mutation {
+    postPhoto(name: String! description: String): Boolean!
+  }
 `;
+
+// 写真を格納する配列
+let photos = [];
 
 // リゾルバ定義
 const resolvers = {
   Query: {
-    totalPhotos: () => 42,
+    // 写真の数を返却クエリ
+    totalPhotos: () => photos.length,
+  },
+
+  Mutation: {
+    postPhoto(parent, args) {
+      photos.push(args);
+      return true;
+    },
   },
 };
 
