@@ -2,11 +2,27 @@ const { ApolloServer } = require(`apollo-server`);
 
 // スキーマ定義
 const typeDefs = `
+  # PhotoCategory列挙型定義
+  enum PhotoCategory {
+    SELFIE
+    PORTRAIT
+    ACTION
+    LANDSCAPE
+    GRAPHIC
+  }
+
   # Photo型定義
   type Photo {
     id: ID!
     url: String!
     name: String!
+    category: PhotoCategory!
+    description: String
+  }
+
+  input PostPhotoInput {
+    name: String!
+    category: PhotoCategory=PORTRAIT
     description: String
   }
 
@@ -16,7 +32,7 @@ const typeDefs = `
   }
 
   type Mutation {
-    postPhoto(name: String! description: String): Photo!
+    postPhoto(input: PostPhotoInput!): Photo!
   }
 `;
 
@@ -39,7 +55,7 @@ const resolvers = {
       // IDを裁判して写真インスタンスを構築して、配列に登録
       let newPhoto = {
         id: ++_id,
-        ...args,
+        ...args.input,
       };
       photos.push(newPhoto);
       // 登録した写真を返却
