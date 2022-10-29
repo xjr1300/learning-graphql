@@ -1,0 +1,19 @@
+version: "3.1"
+
+services:
+  mongo:
+    image: mongo
+    container_name: learing_graphql_mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+    volumes:
+      - learing_graphql_mongodb:/data/db
+      - leaning_graphql_mongodb_configdb:/data/configdb
+
+volumes:
+  learing_graphql_mongodb:
+  leaning_graphql_mongodb_configdb:
