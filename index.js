@@ -1,5 +1,6 @@
-const { ApolloServer } = require(`apollo-server`);
+const { ApolloServer } = require(`apollo-server-express`);
 const { GraphQLScalarType } = require("graphql");
+const express = require("express");
 
 // スキーマ定義
 const typeDefs = `
@@ -163,14 +164,26 @@ const resolvers = {
   }),
 };
 
-// サーバー・インスタンス構築
-// スキーマとリゾルバを引数で与える。
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+// Expressアプリケーションを作成
+let app = express();
+// ホーム・ルートを設定
+app.get("/", (req, res) => res.end("Welcome to the PhotoShare API"));
 
-// サーバーを起動
-server
-  .listen()
-  .then(({ url }) => console.log(`GraphQL Service running on ${url}`));
+const startServer = async () => {
+  // サーバー・インスタンス構築
+  // スキーマとリゾルバを引数で与える。
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await server.start();
+  // サーバーにExpressミドルウェアを追加
+  server.applyMiddleware({ app });
+  // サーバーを起動
+  app.listen({ port: 4000 }, () =>
+    console.log(
+      `GraphQL Server running @ http://localhost::4000${server.graphqlPath}`
+    )
+  );
+};
+startServer();
