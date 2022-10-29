@@ -1,5 +1,7 @@
 const { ApolloServer } = require(`apollo-server-express`);
 const { GraphQLScalarType } = require("graphql");
+const expressPlayground =
+  require("graphql-playground-middleware-express").default;
 const express = require("express");
 
 // スキーマ定義
@@ -168,6 +170,8 @@ const resolvers = {
 let app = express();
 // ホーム・ルートを設定
 app.get("/", (req, res) => res.end("Welcome to the PhotoShare API"));
+// GraphQL Playground用のルートを設定
+app.get("/playground", expressPlayground({ endpoint: "/graphql" }));
 
 const startServer = async () => {
   // サーバー・インスタンス構築
