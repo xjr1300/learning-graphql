@@ -31,6 +31,36 @@ type User {
 }
 
 """
+A category enum of photos
+"""
+enum PhotoCategory {
+  """
+  describe a selfie photo
+  """
+  SELFIE
+
+  """
+  describe a portrait photo
+  """
+  PORTRAIT
+
+  """
+  describe an action photo
+  """
+  ACTION
+
+  """
+  describe a landscape photo
+  """
+  LANDSCAPE
+
+  """
+  describe a graphic photo
+  """
+  GRAPHIC
+}
+
+"""
 The details of a photo
 """
 type Photo {
@@ -76,53 +106,18 @@ type Photo {
 }
 
 """
-A category enum of photos
+A custom type for auth object
 """
-enum PhotoCategory {
+type AuthPayload {
   """
-  describe a selfie photo
+  A jwt token returned after a successful auth
   """
-  SELFIE
+  token: String!
 
   """
-  describe a portrait photo
+  A user that was authenticated
   """
-  PORTRAIT
-
-  """
-  describe an action photo
-  """
-  ACTION
-
-  """
-  describe a landscape photo
-  """
-  LANDSCAPE
-
-  """
-  describe a graphic photo
-  """
-  GRAPHIC
-}
-
-"""
-The input sent with the postedPhoto Mutation
-"""
-input PostPhotoInput {
-  """
-  The name of the new photo
-  """
-  name: String!
-
-  """
-  (optional) The category that defines the photo (default = PORTRAIT)
-  """
-  category: PhotoCategory = PORTRAIT
-
-  """
-  (optional) A brief description of the photo
-  """
-  description: String
+  user: User!
 }
 
 """
@@ -151,6 +146,26 @@ type Query {
 }
 
 """
+The input sent with the postedPhoto Mutation
+"""
+input PostPhotoInput {
+  """
+  The name of the new photo
+  """
+  name: String!
+
+  """
+  (optional) The category that defines the photo (default = PORTRAIT)
+  """
+  category: PhotoCategory = PORTRAIT
+
+  """
+  (optional) A brief description of the photo
+  """
+  description: String
+}
+
+"""
 A root type showing all the mutations (CREATE, UPDATE and DELETE)
 """
 type Mutation {
@@ -163,4 +178,14 @@ type Mutation {
     """
     input: PostPhotoInput!
   ): Photo!
+
+  """
+  A mutation to Authenticate a GitHub user
+  """
+  githubAuth(
+    """
+    A password or GitHub token
+    """
+    code: String!
+  ): AuthPayload!
 }
