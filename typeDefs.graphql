@@ -138,6 +138,16 @@ type Query {
   A query that returns all the photos
   """
   allPhotos: [Photo!]!
+
+  """
+  A query that returns the total number of users
+  """
+  totalUsers: Int!
+
+  """
+  A query that return all users
+  """
+  allUsers: [User!]!
 }
 
 """
