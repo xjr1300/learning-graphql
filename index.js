@@ -7,23 +7,36 @@ const { readFileSync } = require("fs");
 const typeDefs = readFileSync("./typeDefs.graphql", "utf-8");
 const resolvers = require("./resolvers");
 
-// Expressアプリケーションを作成
-let app = express();
-// ホーム・ルートを設定
-app.get("/", (req, res) => res.end("Welcome to the PhotoShare API"));
-// GraphQL Playground用のルートを設定
-app.get("/playground", expressPlayground({ endpoint: "/graphql" }));
+const { MongoClient } = require("mongodb");
+require("dotenv").config();
 
-const startServer = async () => {
-  // サーバー・インスタンス構築
-  // スキーマとリゾルバを引数で与える。
+const start = async () => {
+  // Expressアプリケーションを作成
+  let app = express();
+
+  // データベースと接続
+  const MONGO_DB = process.env.DB_HOST;
+  const client = await MongoClient.connect(MONGO_DB, { useNewUrlParser: true });
+  const db = client.db();
+
+  // サーバー・インスタンスを構築して起動
+  // スキーマ、リゾルバ及びコンテキストを引数で与える。
+  const context = { db };
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    context,
   });
   await server.start();
+
   // サーバーにExpressミドルウェアを追加
   server.applyMiddleware({ app });
+
+  // ホーム・ルートを設定
+  app.get("/", (req, res) => res.end("Welcome to the PhotoShare API"));
+  // GraphQL Playground用のルートを設定
+  app.get("/playground", expressPlayground({ endpoint: "/graphql" }));
+
   // サーバーを起動
   app.listen({ port: 4000 }, () =>
     console.log(
@@ -31,4 +44,5 @@ const startServer = async () => {
     )
   );
 };
-startServer();
+
+start();
