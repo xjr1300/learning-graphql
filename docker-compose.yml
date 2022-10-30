@@ -11,9 +11,9 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - learing_graphql_mongodb:/data/db
-      - leaning_graphql_mongodb_configdb:/data/configdb
+      - learning_graphql_mongodb:/data/db
+      - learning_graphql_mongodb_configdb:/data/configdb
 
 volumes:
-  learing_graphql_mongodb:
-  leaning_graphql_mongodb_configdb:
+  learning_graphql_mongodb:
+  learning_graphql_mongodb_configdb:
