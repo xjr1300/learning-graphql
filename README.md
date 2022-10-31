@@ -12,7 +12,9 @@ npm install dotenv
 データベース名を`learning_graphql`とした。
 
 ```.env
-DB_HOST=mongodb://localhost:27017/learning_graphql
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_DB_NAME=learning_graphql
 ```
 
 `mongodb`を`Docker`で起動する。
@@ -39,5 +41,5 @@ exit
 `mongodb`は、`use <database-name>`とするとデータベースが作成される。
 しかし、コレクション（テーブル）を作成しないと、`show dbs`でそのデータベースは表示されない。
 コレクションを作成後、`show dbs`でデータベースが表示される。
-
-> 本サービスで、明示的にデータベースを作成する必要はない（？）
+なお、データベースにアクセス、またはコレクションにアクセスすると、自動的にデータベースやコレクションが作成される。
+よって、明示的にデータベースやコレクションを作成する必要はない。
