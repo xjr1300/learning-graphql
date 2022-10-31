@@ -1,33 +1,50 @@
 const { GraphQLScalarType } = require("graphql");
+const { ObjectId } = require("mongodb");
 
 module.exports = {
   Photo: {
-    url: (parent) => `http://yoursite.com/img/${parent.id}.jpg`,
-    postedBy: (parent) => {
-      return users.find((u) => u.githubLogin === parent.githubUser);
-    },
-    taggedUsers: (parent) =>
-      tags
+    id: (parent) => parent.id || parent._id,
+
+    url: (parent) => `/img/photos/${parent._id}.jpg`,
+
+    postedBy: (parent, args, { db }) =>
+      db.collection("users").findOne({ githubLogin: parent.userID }),
+
+    taggedUsers: async (parent, args, { db }) => {
+      const tags = db.collection("tags").find().toArray();
+      const users = tags
         // タグから写真ID(parent.id)と一致するタグを抽出
-        .filter((tag) => tag.photoID === parent.id)
+        .filter((tag) => tag.photoID === parent._id.toString())
         // 抽出したタグからユーザーIDの配列を作成
-        .map((tag) => tag.userID)
-        // すべてのユーザーから、写真IDが一致する写真を検索して配列に格納
-        .map((userID) => users.find((u) => u.githubLogin === userID)),
+        .map((tag) => tag.githubLogin);
+      // すべてのユーザーから、写真IDが一致する写真を検索して配列に格納
+      return db
+        .collection("users")
+        .find({ githubLogin: { $in: users } })
+        .toArray();
+    },
   },
 
   User: {
-    postedPhotos: (parent) => {
-      return photos.filter((p) => p.githubUser === parent.githubLogin);
-    },
-    inPhotos: (parent) =>
-      tags
+    postedPhotos: (parent, args, { db }) =>
+      db.collection("photos").find({ userID: parent.githubLogin }).toArray(),
+
+    inPhotos: async (parent, args, { db }) => {
+      const tags = db.collection("tags").find().toArray();
+      const photoIds = tags
         // タグからユーザーID(parent.id)と一致するタグを抽出
-        .filter((tag) => tag.userID === parent.id)
+        .filter((tag) => tag.githubLogin === parent.githubLogin)
         // 抽出したタグから写真IDの配列を作成
-        .map((tag) => tag.photoID)
-        // すべての写真から、写真IDが一致する写真を検索して配列に格納
-        .filter((photoID) => photos.find((p) => p.id == photoID)),
+        .map((t) => ObjectId(t.photoID));
+      // すべての写真から、写真IDが一致する写真を検索して配列に格納
+      return (
+        db
+          .collection("photos")
+          // mongodbはドキュメントごとにユニークな_idフィールドを持つ。
+          .find({ _id: { $in: photoIds } })
+          .toArray()
+      );
+    },
   },
 
   DateTime: new GraphQLScalarType({
