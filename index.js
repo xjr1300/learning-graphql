@@ -15,8 +15,9 @@ const start = async () => {
   let app = express();
 
   // データベースと接続
-  const MONGO_DB = process.env.DB_HOST;
-  const client = await MongoClient.connect(MONGO_DB, { useNewUrlParser: true });
+  const { MONGO_HOST, MONGO_PORT, MONGO_DB_NAME } = process.env;
+  const mongoUrl = `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_NAME}`;
+  const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true });
   const db = client.db();
 
   // サーバー・インスタンスを構築して起動
