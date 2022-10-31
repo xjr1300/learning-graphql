@@ -26,8 +26,8 @@ const start = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: async ({ request }) => {
-      const githubToken = request.headers.authorization;
+    context: async ({ req }) => {
+      const githubToken = req.headers.authorization;
       const currentUser = await db.collection("users").findOne({ githubToken });
       return { db, currentUser };
     },
