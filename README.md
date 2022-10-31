@@ -43,3 +43,40 @@ exit
 コレクションを作成後、`show dbs`でデータベースが表示される。
 なお、データベースにアクセス、またはコレクションにアクセスすると、自動的にデータベースやコレクションが作成される。
 よって、明示的にデータベースやコレクションを作成する必要はない。
+
+## addFakeUserミューテーションの実行
+
+```graphql
+mutation addFakeUsers {
+    addFakeUsers(count: 3) {
+        githubLogin
+        name
+        avatar
+        githubLogin
+    }
+}
+```
+
+```json
+{
+  "data": {
+    "addFakeUsers": [
+      {
+        "githubLogin": "browntiger262",
+        "name": "Karine Vaksdal",
+        "avatar": "https://randomuser.me/api/portraits/thumb/women/40.jpg"
+      },
+      {
+        "githubLogin": "happybird362",
+        "name": "Simeon Živojinović",
+        "avatar": "https://randomuser.me/api/portraits/thumb/men/16.jpg"
+      },
+      {
+        "githubLogin": "purpleladybug316",
+        "name": "Sheryl Martin",
+        "avatar": "https://randomuser.me/api/portraits/thumb/women/42.jpg"
+      }
+    ]
+  }
+}
+```
