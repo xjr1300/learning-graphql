@@ -1,24 +1,25 @@
 const requestGithubToken = (credentials) =>
   fetch("https://github.com/login/oauth/access_token", {
-    method: "post",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify(credentials),
-  })
-    .then((response) => response.json())
-    .catch((error) => {
-      throw new Error(JSON.stringify(error));
-    });
+  }).then((res) => res.json());
 
 const requestGithubUserAccount = (token) =>
-  fetch(`https://api.github.com/user?access_token=${token}`)
-    .then(toJSON)
-    .catch(throwError);
+  fetch("https://api.github.com/user", {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+    },
+  }).then((res) => res.json());
 
 const authorizeWithGithub = async (credentials) => {
-  const { accessToken } = await requestGithubToken(credentials);
-  const githubUser = await requestGithubUserAccount(accessToken);
-  return { ...githubUser, accessToken };
+  const { access_token } = await requestGithubToken(credentials);
+  const githubUser = await requestGithubUserAccount(access_token);
+  return { ...githubUser, access_token };
 };
+
+module.exports = { authorizeWithGithub };
