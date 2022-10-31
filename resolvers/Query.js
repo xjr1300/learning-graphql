@@ -1,4 +1,7 @@
 module.exports = {
+  // アクセストークンで識別されるユーザーを返却
+  me: (parent, args, { currentUser }) => currentUser,
+
   // 登録されている写真の数を返却
   totalPhotos: (parent, args, { db }) =>
     db.collection("photos").estimatedDocumentCount(),

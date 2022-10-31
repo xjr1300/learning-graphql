@@ -125,6 +125,11 @@ A root type showing all the queries (READ)
 """
 type Query {
   """
+  A query that return the authenticated user from token
+  """
+  me: User
+
+  """
   A query that returns the total number of photos
   """
   totalPhotos: Int!
