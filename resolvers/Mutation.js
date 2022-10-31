@@ -1,14 +1,28 @@
 const { authorizeWithGithub } = require("../lib");
 
 module.exports = {
-  postPhoto(parent, args) {
-    // IDを裁判して写真インスタンスを構築して、配列に登録
+  async postPhoto(parent, args, { db, currentUser }) {
+    // コンテキストにユーザーが設定されていない場合はエラーをスロー
+    if (!currentUser) {
+      throw new Error("only an authenticated user can post a photo");
+    }
+
+    // ユーザーのIDと写真を保存
     let newPhoto = {
-      id: ++_id,
       ...args.input,
+      userID: currentUser.githubLogin,
       created: new Date(),
     };
-    photos.push(newPhoto);
+
+    // データベースに写真を登録して、データベースが生成したIDを取得
+    // mongodbは登録したドキュメント（この場合は写真）ごとに固有の識別子を作成する。
+    // db.collection.create()メソッドは、作成した識別子を配列で返却する。
+    // db.collection.create()メソッドは、登録するドキュメントの配列を受け付ける。
+    // mongodbはドキュメントごとにユニークな_idフィールドを持つ。
+    // const { insertedIds } = await db.collection("photos").insert(newPhoto);
+    const { insertedId } = await db.collection("photos").insertOne(newPhoto);
+    newPhoto.id = insertedId;
+
     // 登録した写真を返却
     return newPhoto;
   },
@@ -50,7 +64,7 @@ module.exports = {
       .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true });
     // console.log(`ops: ${JSON.stringify(ops)}`);
     const { _token, ...user } = latestUserInfo;
-    //console.log(`user: ${JSON.stringify(user)}`);
+    // console.log(`user: ${JSON.stringify(user)}`);
 
     // ユーザーとトークンを返却
     return { user, token: access_token };
