@@ -193,4 +193,24 @@ type Mutation {
     """
     code: String!
   ): AuthPayload!
+
+  """
+  A mutation to add fake(mocked) users
+  """
+  addFakeUsers(
+    """
+    the count of user to be added (defaults = 1)
+    """
+    count: Int = 1
+  ): [User!]!
+
+  """
+  A mutation to authenticate a fake user
+  """
+  fakeUserAuth(
+    """
+    The user's unique GitHub login
+    """
+    githubLogin: ID!
+  ): AuthPayload!
 }
