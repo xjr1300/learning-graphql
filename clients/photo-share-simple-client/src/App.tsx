@@ -1,36 +1,73 @@
-import { FC, useState } from 'react';
-import reactLogo from './assets/react.svg';
-import './App.css';
+import { FC, useEffect, useState } from 'react';
+import { request } from 'graphql-request';
+
+import Users, { User } from 'Users';
 
 const title = import.meta.env.VITE_APP_TITLE;
-console.dir(import.meta.env);
+
+const url = 'http://localhost:4000/graphql';
+
+const query = `
+  query listUsers {
+    allUsers {
+      githubLogin
+      avatar
+      name
+    }
+  }
+`;
+
+const mutation = `
+  mutation populate($count: Int!) {
+    addFakeUsers(count: $count) {
+      githubLogin
+    }
+  }
+`;
 
 const App: FC = () => {
-  const [count, setCount] = useState(0);
+  const [users, setUsers] = useState<User[]>([]);
+
+  const getUsers = async (): Promise<User[]> => {
+    try {
+      const users = await request(url, query);
+      return users.allUsers;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  };
+
+  const addUser = async (): Promise<User | undefined> => {
+    try {
+      const user = await request(url, mutation, { count: 1 });
+      console.log(user);
+      return user;
+    } catch (error) {
+      console.log(error);
+      return undefined;
+    }
+  };
+
+  const addUserClick = () =>
+    (async () => {
+      const user = await addUser();
+      if (user) {
+        setUsers([...users, user]);
+      }
+    })();
+
+  useEffect(() => {
+    (async () => {
+      const allUsers = await getUsers();
+      setUsers(allUsers);
+    })();
+  }, [users]);
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <p>{title}</p>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <h1>{title}</h1>
+      <Users users={users} addUserClick={addUserClick} />
     </div>
   );
 };
