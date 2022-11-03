@@ -3,15 +3,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon -e js,json,graphql",
+    "start": "nodemon -e js,json,graphql --experimental-fetch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-server": "^3.10.3",
+    "@graphql-tools/schema": "^9.0.8",
+    "apollo-server-express": "^3.10.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
     "graphql": "^16.6.0",
-    "nodemon": "^2.0.20"
+    "graphql-playground-middleware-express": "^1.7.23",
+    "graphql-ws": "^5.11.2",
+    "mongodb": "^4.11.0",
+    "nodemon": "^2.0.20",
+    "ws": "^8.10.0"
   }
 }

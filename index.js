@@ -1,65 +1,80 @@
-const { ApolloServer } = require(`apollo-server`);
+const { readFileSync } = require("fs");
 
-// スキーマ定義
-const typeDefs = `
-  # Photo型定義
-  type Photo {
-    id: ID!
-    url: String!
-    name: String!
-    description: String
-  }
+const { ApolloServer } = require(`apollo-server-express`);
+const expressPlayground =
+  require("graphql-playground-middleware-express").default;
+const express = require("express");
 
-  type Query {
-    totalPhotos: Int!
-    allPhotos: [Photo!]!
-  }
+const { createServer } = require("http");
+const { makeExecutableSchema } = require("@graphql-tools/schema");
+const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
+const { WebSocketServer } = require("ws");
+const { useServer } = require("graphql-ws/lib/use/ws");
 
-  type Mutation {
-    postPhoto(name: String! description: String): Photo!
-  }
-`;
+const typeDefs = readFileSync("./typeDefs.graphql", "utf-8");
+const resolvers = require("./resolvers");
 
-// 投稿された写真に付与するID
-let _id = 0;
-// 写真を格納する配列
-let photos = [];
+const { MongoClient } = require("mongodb");
+require("dotenv").config();
 
-// リゾルバ定義
-const resolvers = {
-  Query: {
-    // 写真の数を返却するクエリ
-    totalPhotos: () => photos.length,
-    // 登録されているすべての写真を返却するクエリ
-    allPhotos: () => photos,
-  },
+const start = async () => {
+  // Expressアプリケーションを作成
+  let app = express();
 
-  Mutation: {
-    postPhoto(parent, args) {
-      // IDを裁判して写真インスタンスを構築して、配列に登録
-      let newPhoto = {
-        id: ++_id,
-        ...args,
-      };
-      photos.push(newPhoto);
-      // 登録した写真を返却
-      return newPhoto;
+  // WebSocketを提供するサーバーを構築
+  const httpServer = createServer(app);
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql",
+  });
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const serverCleanup = useServer({ schema }, wsServer);
+
+  // データベースと接続
+  const { MONGO_HOST, MONGO_PORT, MONGO_DB_NAME } = process.env;
+  const mongoUrl = `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_NAME}`;
+  const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true });
+  const db = client.db();
+
+  // サーバー・インスタンスを構築して起動
+  // スキーマ、リゾルバ及びコンテキストを引数で与える。
+  const server = new ApolloServer({
+    schema,
+    context: async ({ req }) => {
+      const githubToken = req.headers.authorization;
+      const currentUser = await db.collection("users").findOne({ githubToken });
+      return { db, currentUser };
     },
-  },
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      // Proper shutdown for the WebSocket server.
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
+  });
+  await server.start();
 
-  Photo: {
-    url: (parent) => `http://yooursite.com/img/${parent.id}.jpg`,
-  },
+  // サーバーにExpressミドルウェアを追加
+  server.applyMiddleware({ app });
+
+  // ホーム・ルートを設定
+  app.get("/", (req, res) => res.end("Welcome to the PhotoShare API"));
+  // GraphQL Playground用のルートを設定
+  app.get("/playground", expressPlayground({ endpoint: "/graphql" }));
+
+  // サーバーを起動
+  app.listen({ port: 4000 }, () =>
+    console.log(
+      `GraphQL Server running @ http://localhost::4000${server.graphqlPath}`
+    )
+  );
 };
 
-// サーバー・インスタンス構築
-// スキーマとリゾルバを引数で与える。
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-// サーバーを起動
-server
-  .listen()
-  .then(({ url }) => console.log(`GraphQL Service running on ${url}`));
+start();

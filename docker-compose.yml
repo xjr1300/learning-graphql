@@ -1,0 +1,18 @@
+version: "3.1"
+
+services:
+  mongo:
+    image: mongo
+    container_name: learning_graphql_mongo
+    hostname: learning_graphql_mongo
+    restart: always
+    env_file: ./.env
+    ports:
+      - ${MONGO_PORT}:${MONGO_PORT}
+    volumes:
+      - learning_graphql_mongo:/data/db
+      - learning_graphql_mongo_configdb:/data/configdb
+
+volumes:
+  learning_graphql_mongo:
+  learning_graphql_mongo_configdb:
