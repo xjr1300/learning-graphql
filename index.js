@@ -1,8 +1,15 @@
+const { readFileSync } = require("fs");
+
 const { ApolloServer } = require(`apollo-server-express`);
 const expressPlayground =
   require("graphql-playground-middleware-express").default;
 const express = require("express");
-const { readFileSync } = require("fs");
+
+const { createServer } = require("http");
+const { makeExecutableSchema } = require("@graphql-tools/schema");
+const { ApolloServerPluginDrainHttpServer } = require("apollo-server-core");
+const { WebSocketServer } = require("ws");
+const { useServer } = require("graphql-ws/lib/use/ws");
 
 const typeDefs = readFileSync("./typeDefs.graphql", "utf-8");
 const resolvers = require("./resolvers");
@@ -14,6 +21,15 @@ const start = async () => {
   // Expressアプリケーションを作成
   let app = express();
 
+  // WebSocketを提供するサーバーを構築
+  const httpServer = createServer(app);
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql",
+  });
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+  const serverCleanup = useServer({ schema }, wsServer);
+
   // データベースと接続
   const { MONGO_HOST, MONGO_PORT, MONGO_DB_NAME } = process.env;
   const mongoUrl = `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_NAME}`;
@@ -22,15 +38,26 @@ const start = async () => {
 
   // サーバー・インスタンスを構築して起動
   // スキーマ、リゾルバ及びコンテキストを引数で与える。
-  const context = { db };
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
     context: async ({ req }) => {
       const githubToken = req.headers.authorization;
       const currentUser = await db.collection("users").findOne({ githubToken });
       return { db, currentUser };
     },
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      // Proper shutdown for the WebSocket server.
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
   });
   await server.start();
 
