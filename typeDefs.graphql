@@ -214,3 +214,10 @@ type Mutation {
     githubLogin: ID!
   ): AuthPayload!
 }
+
+"""
+A root type showing all the subscriptions
+"""
+type Subscription {
+  newPhoto: Photo!
+}
