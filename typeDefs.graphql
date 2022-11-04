@@ -219,5 +219,13 @@ type Mutation {
 A root type showing all the subscriptions
 """
 type Subscription {
+  """
+  A subscription to a posted photo
+  """
   newPhoto: Photo!
+
+  """
+  A subscription to a registered user
+  """
+  newUser: User!
 }

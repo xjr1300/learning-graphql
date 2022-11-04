@@ -65,7 +65,13 @@ const start = async () => {
   // ホーム・ルートを設定
   app.get("/", (req, res) => res.end("Welcome to the PhotoShare API"));
   // GraphQL Playground用のルートを設定
-  app.get("/playground", expressPlayground({ endpoint: "/graphql" }));
+  app.use(
+    "/playground",
+    expressPlayground({
+      endpoint: "/graphql",
+      subscriptionEndpoint: "ws://localhost:4000/graphql",
+    })
+  );
 
   // サーバーを起動
   app.listen({ port: 4000 }, () =>
