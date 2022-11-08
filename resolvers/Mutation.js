@@ -1,7 +1,9 @@
 const { authorizeWithGithub } = require("../lib");
+const { uploadStream } = require("../lib");
+const path = require("path");
 
 module.exports = {
-  async postPhoto(parent, args, { db, currentUser }) {
+  async postPhoto(parent, args, { db, currentUser, pubsub }) {
     // コンテキストにユーザーが設定されていない場合はエラーをスロー
     if (!currentUser) {
       throw new Error("only an authenticated user can post a photo");
@@ -22,6 +24,19 @@ module.exports = {
     // const { insertedIds } = await db.collection("photos").insert(newPhoto);
     const { insertedId } = await db.collection("photos").insertOne(newPhoto);
     newPhoto.id = insertedId;
+
+    const toPath = path.join(
+      __dirname,
+      "..",
+      "assets",
+      "photos",
+      `${newPhoto.id}.jpg`
+    );
+
+    const { stream } = await args.input.file;
+    await uploadStream(stream, toPath);
+
+    pubsub.publish("photo-added", { newPhoto });
 
     // 登録した写真を返却
     return newPhoto;
