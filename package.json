@@ -20,6 +20,7 @@
     "graphql": "^16.6.0",
     "graphql-playground-middleware-express": "^1.7.23",
     "graphql-subscriptions": "^2.0.0",
+    "graphql-upload": "^16.0.2",
     "graphql-ws": "^5.11.2",
     "mongodb": "^4.11.0",
     "nodemon": "^2.0.20",

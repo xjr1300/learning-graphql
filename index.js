@@ -1,4 +1,5 @@
 const { readFileSync } = require("fs");
+const path = require("path");
 
 const { ApolloServer } = require("apollo-server-express");
 const { PubSub } = require("graphql-subscriptions");
@@ -71,6 +72,10 @@ const start = async () => {
       endpoint: "/graphql",
       subscriptionEndpoint: "ws://localhost:4000/graphql",
     })
+  );
+  app.use(
+    "img/photos",
+    express.static(path.join(__dirname, "assets", "photos"))
   );
 
   // サーバーを起動

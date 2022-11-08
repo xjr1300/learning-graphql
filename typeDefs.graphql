@@ -1,4 +1,5 @@
 scalar DateTime
+scalar Upload
 
 """
 A user who has been authorized by GitHub at least once
@@ -168,6 +169,11 @@ input PostPhotoInput {
   (optional) A brief description of the photo
   """
   description: String
+
+  """
+  The new photo image file
+  """
+  file: Upload!
 }
 
 """
